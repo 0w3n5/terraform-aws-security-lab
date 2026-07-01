@@ -1,0 +1,14 @@
+Provider
+   |
+   ↓
+VPC
+   |
+   ├── Internet Gateway
+   |
+   ├── Public Subnet
+   |       |
+   |       └── Public Route Table → Internet Gateway
+   |
+   └── Private Subnet
+           |
+           └── Private Route Table

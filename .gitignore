@@ -1,1 +1,15 @@
+.venv/
+__pycache__/
+*.pyc
 
+audit_results.json
+reports/*.md
+
+.env
+*.pem
+*.key
+
+# Terraform
+.terraform/
+*.tfstate
+*.tfstate.*

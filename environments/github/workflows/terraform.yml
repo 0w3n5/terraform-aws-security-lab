@@ -1,0 +1,112 @@
+name: Terraform Security Pipeline
+
+on:
+  push:
+    branches:
+      - main
+      - develop
+
+  pull_request:
+    branches:
+      - main
+      - develop
+
+permissions:
+  contents: read
+
+jobs:
+  terraform:
+    name: Terraform Security Checks
+
+    runs-on: ubuntu-latest
+
+    steps:
+
+      # ============================================================
+      # CHECKOUT
+      # ============================================================
+
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+
+      # ============================================================
+      # TERRAFORM SETUP
+      # ============================================================
+
+      - name: Setup Terraform
+        uses: hashicorp/setup-terraform@v3
+        with:
+          terraform_version: "1.9.8"
+
+
+      # ============================================================
+      # TERRAFORM FORMAT
+      # ============================================================
+
+      - name: Terraform Format
+        run: terraform fmt -check -recursive
+
+
+      # ============================================================
+      # TERRAFORM INIT
+      # ============================================================
+
+      - name: Terraform Init
+        working-directory: environments/dev
+        run: terraform init -backend=false
+
+
+      # ============================================================
+      # TERRAFORM VALIDATE
+      # ============================================================
+
+      - name: Terraform Validate
+        working-directory: environments/dev
+        run: terraform validate
+
+
+      # ============================================================
+      # TFLINT
+      # ============================================================
+
+      - name: Setup TFLint
+        uses: terraform-linters/setup-tflint@v4
+
+      - name: Initialise TFLint
+        run: tflint --init
+
+      - name: Run TFLint
+        working-directory: environments/dev
+        run: tflint --recursive
+
+
+      # ============================================================
+      # CHECKOV
+      # ============================================================
+
+      - name: Run Checkov
+        uses: bridgecrewio/checkov-action@v12
+        with:
+          directory: .
+          framework: terraform
+          soft_fail: false
+
+
+      # ============================================================
+      # TFSEC
+      # ============================================================
+
+      - name: Run tfsec
+        uses: aquasecurity/tfsec-action@v1.0.3
+        with:
+          soft_fail: false
+
+
+      # ============================================================
+      # TERRAFORM PLAN
+      # ============================================================
+
+      - name: Terraform Plan
+        working-directory: environments/dev
+        run: terraform plan -input=false -lock=false
